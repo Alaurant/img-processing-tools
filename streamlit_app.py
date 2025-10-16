@@ -132,11 +132,26 @@ def validate_uploaded_file(uploaded_file) -> bool:
 def feature_file_upload():
     """Feature 2: File upload and conversion"""
     st.header("📁 Upload Image Files for Conversion")
-    
+
+    # Add clear button
+    col1, col2 = st.columns([5, 1])
+    with col2:
+        if st.button("🗑️ Clear All", type="secondary", help="Clear all uploaded images"):
+            # Clear the file uploader by resetting session state
+            if 'file_uploader_key' in st.session_state:
+                st.session_state.file_uploader_key += 1
+            else:
+                st.session_state.file_uploader_key = 0
+            st.rerun()
+
+    # Use dynamic key for file uploader to enable clearing
+    uploader_key = st.session_state.get('file_uploader_key', 0)
+
     uploaded_files = st.file_uploader(
         "Select image files",
         type=['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'gif'],
-        accept_multiple_files=True
+        accept_multiple_files=True,
+        key=f"file_uploader_{uploader_key}"
     )
     
     if uploaded_files:
