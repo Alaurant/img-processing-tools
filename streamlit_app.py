@@ -190,27 +190,36 @@ def feature_file_upload():
                 
                 # Save uploaded files with optional renaming
                 if enable_rename and rename_base.strip():
-                    # Sort files by name to maintain consistent ordering
-                    sorted_files = sorted(uploaded_files, key=lambda f: f.name.lower())
                     sanitized_base = sanitize_filename(rename_base)
-                    
-                    # Extract numbers from original filenames and preserve them
-                    for uploaded_file in sorted_files:
-                        original_name = Path(uploaded_file.name).stem
-                        # Extract number from filename like "img (1)", "photo2", "image_03" etc.
-                        number_match = re.search(r'[\(_\s](\d+)[\)_\s]*$|(\d+)$', original_name)
-                        
-                        if number_match:
-                            # Use the extracted number
-                            number = number_match.group(1) or number_match.group(2)
-                            new_filename = f"{sanitized_base}-{number}{Path(uploaded_file.name).suffix}"
-                        else:
-                            # If no number found, keep it simple without number
-                            new_filename = f"{sanitized_base}{Path(uploaded_file.name).suffix}"
-                        
-                        file_path = input_dir / new_filename
-                        with open(file_path, "wb") as f:
+
+                    # Save files temporarily to get their creation time
+                    temp_files_info = []
+                    for uploaded_file in uploaded_files:
+                        temp_path = input_dir / f"temp_{uploaded_file.name}"
+                        with open(temp_path, "wb") as f:
                             f.write(uploaded_file.getbuffer())
+
+                        # Get file creation/modification time
+                        file_stat = temp_path.stat()
+                        creation_time = file_stat.st_ctime
+
+                        temp_files_info.append({
+                            'path': temp_path,
+                            'original_name': uploaded_file.name,
+                            'creation_time': creation_time,
+                            'extension': Path(uploaded_file.name).suffix
+                        })
+
+                    # Sort by creation time (oldest to newest)
+                    sorted_files_info = sorted(temp_files_info, key=lambda x: x['creation_time'])
+
+                    # Rename files with sequential numbers
+                    for idx, file_info in enumerate(sorted_files_info, start=1):
+                        new_filename = f"{sanitized_base}-{idx}{file_info['extension']}"
+                        new_path = input_dir / new_filename
+
+                        # Rename the temp file to the final name
+                        file_info['path'].rename(new_path)
                 else:
                     # Save with original names
                     for uploaded_file in uploaded_files:
