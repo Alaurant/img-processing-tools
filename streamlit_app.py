@@ -136,26 +136,22 @@ def feature_file_upload():
     # Use dynamic key for file uploader to enable clearing
     uploader_key = st.session_state.get('file_uploader_key', 0)
 
-    # File uploader and clear button on the same line
-    col1, col2 = st.columns([5, 1])
-    with col1:
-        uploaded_files = st.file_uploader(
-            "Select image files",
-            type=['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'gif'],
-            accept_multiple_files=True,
-            key=f"file_uploader_{uploader_key}"
-        )
-    with col2:
-        # Only show clear button if there are uploaded files
-        if uploaded_files:
-            st.write("")  # Add spacing to align with uploader
-            if st.button("🗑️ Clear", type="secondary", help="Clear all uploaded images", use_container_width=True):
-                # Clear the file uploader by resetting session state
-                if 'file_uploader_key' in st.session_state:
-                    st.session_state.file_uploader_key += 1
-                else:
-                    st.session_state.file_uploader_key = 0
-                st.rerun()
+    uploaded_files = st.file_uploader(
+        "Select image files",
+        type=['png', 'jpg', 'jpeg', 'bmp', 'tiff', 'gif'],
+        accept_multiple_files=True,
+        key=f"file_uploader_{uploader_key}"
+    )
+
+    # Show clear button only when files are uploaded, positioned right after uploader
+    if uploaded_files:
+        if st.button("🗑️ Clear All", type="secondary", help="Clear all uploaded images"):
+            # Clear the file uploader by resetting session state
+            if 'file_uploader_key' in st.session_state:
+                st.session_state.file_uploader_key += 1
+            else:
+                st.session_state.file_uploader_key = 0
+            st.rerun()
     
     if uploaded_files:
         # Validate uploaded files
